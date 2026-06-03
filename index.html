@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lost Memories - Straight 3D Path</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="screen start active" id="startScreen">
+      <div class="start-card">
+        <p>Tarzan inspired web experience</p>
+        <h1>Lost Memories</h1>
+        <button class="gold-btn" id="startBtn">Start</button>
+      </div>
+    </section>
+
+    <section class="screen game" id="gameScreen">
+      <header class="ui">
+        <div class="counter">
+          <span>Memory fragments</span>
+          <strong id="counter">0 / 3</strong>
+        </div>
+        <button class="settings" id="settingsBtn">⚙</button>
+      </header>
+
+      <div class="camera">
+        <div class="tilt" id="tilt">
+          <div class="world" id="world">
+            <div class="forest-bg"></div>
+
+            <svg class="path-svg" viewBox="0 0 3200 9000" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="pathColor" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#4b2f19"/>
+                  <stop offset="46%" stop-color="#c5a261"/>
+                  <stop offset="100%" stop-color="#6c4524"/>
+                </linearGradient>
+                <filter id="pathShadow">
+                  <feDropShadow dx="0" dy="24" stdDeviation="18" flood-color="#000" flood-opacity=".42"/>
+                </filter>
+              </defs>
+
+              <path id="mainPath" class="main-path" d="M 1600 8800 L 1600 200"/>
+              <path class="inner-path" d="M 1600 8800 L 1600 200"/>
+              <path class="footsteps" d="M 1600 8800 L 1600 200"/>
+            </svg>
+
+            <button class="puzzle p1" data-puzzle="one"><span>🧩</span><small>Puzzle 1</small></button>
+            <button class="puzzle p2 locked" data-puzzle="two"><span>◎</span><small>Puzzle 2</small></button>
+            <button class="puzzle p3 locked" data-puzzle="three"><span>◐</span><small>Puzzle 3</small></button>
+
+            <button class="path-arrow" id="pathArrow" disabled>
+              ↑
+              <small>Locked</small>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hint">
+        <h2 id="hintTitle">Jungle path</h2>
+        <p id="hintText">Je staat op het pad. Klik op Puzzle 1 om het eerste memory fragment vrij te spelen.</p>
+      </aside>
+    </section>
+
+    <section class="modal hidden" id="puzzleModal">
+      <div class="modal-card">
+        <button class="close" id="closeBtn">×</button>
+        <p class="kicker" id="puzzleType">Puzzle</p>
+        <h2 id="puzzleTitle">Solve the puzzle</h2>
+        <p id="puzzleText"></p>
+        <div class="puzzle-preview" id="preview"></div>
+        <button class="gold-btn" id="solveBtn">Puzzle oplossen</button>
+      </div>
+    </section>
+
+    <section class="modal hidden" id="memoryModal">
+      <div class="modal-card memory">
+        <p class="kicker">Memory unlocked</p>
+        <h2 id="memoryTitle"></h2>
+        <p id="memoryText"></p>
+        <button class="gold-btn" id="continueBtn">Verder</button>
+      </div>
+    </section>
+
+    <section class="screen end" id="endScreen">
+      <div class="end-card">
+        <p>“In the end, love was the only way forward.”</p>
+        <h1>The end</h1>
+        <button class="gold-btn" id="menuBtn">Menu</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
