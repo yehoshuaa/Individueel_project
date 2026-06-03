@@ -41,7 +41,7 @@ const solved = {
 
 // Hoe lang de camera over het pad loopt na een puzzel.
 // 9000 = 9 seconden. Verhoog voor langzamer, verlaag voor sneller.
-const WALK_DURATION = 9000ms;
+const WALK_DURATION = 9000;
 
 const pathStages = [
   {
@@ -199,8 +199,19 @@ function openPuzzle(key) {
   puzzleTitle.textContent = data.title;
   puzzleText.textContent = data.text;
 
-  preview.className = `puzzle-preview ${data.previewClass}`;
-  preview.innerHTML = data.previewHtml;
+  if (key === "one") {
+    solveBtn.style.display = "none";
+    createJigsawPuzzle("images/puzzle1.jpg", 4);
+
+  } else if (key === "two") {
+    solveBtn.style.display = "none";
+    createMazePuzzle();
+
+  } else {
+    solveBtn.style.display = "inline-block";
+    preview.className = `puzzle-preview ${data.previewClass}`;
+    preview.innerHTML = data.previewHtml;
+  }
 
   puzzleModal.classList.remove("hidden");
 }
@@ -305,5 +316,314 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
     closePuzzle();
     closeMemory();
+  }
+});
+
+let jigsawState = {
+  size: 4,
+  tiles: [],
+  firstSelected: null,
+  imageSrc: "images/puzzle1.jpg",
+  solved: false
+};
+
+function shuffleArray(array) {
+  const copy = [...array];
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+}
+
+function isJigsawSolved() {
+  return jigsawState.tiles.every((tile, index) => tile.correctIndex === index);
+}
+
+function renderJigsaw() {
+  preview.className = "puzzle-preview";
+  preview.innerHTML = `<div class="jigsaw-board" id="jigsawBoard"></div>`;
+
+  const board = document.getElementById("jigsawBoard");
+
+  jigsawState.tiles.forEach((tile, index) => {
+    const tileEl = document.createElement("button");
+    tileEl.className = "jigsaw-tile";
+    tileEl.type = "button";
+
+    const xPercent = (tile.col / (jigsawState.size - 1)) * 100;
+    const yPercent = (tile.row / (jigsawState.size - 1)) * 100;
+
+    tileEl.style.backgroundImage = `url(${jigsawState.imageSrc})`;
+    tileEl.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
+
+    if (jigsawState.firstSelected === index) {
+      tileEl.classList.add("selected");
+    }
+
+    if (tile.correctIndex === index) {
+      tileEl.classList.add("correct");
+    }
+
+    tileEl.addEventListener("click", () => onJigsawTileClick(index));
+
+    board.appendChild(tileEl);
+  });
+}
+
+function onJigsawTileClick(index) {
+  if (jigsawState.solved) return;
+
+  if (jigsawState.firstSelected === null) {
+    jigsawState.firstSelected = index;
+    renderJigsaw();
+    return;
+  }
+
+  if (jigsawState.firstSelected === index) {
+    jigsawState.firstSelected = null;
+    renderJigsaw();
+    return;
+  }
+
+  const first = jigsawState.firstSelected;
+
+  [jigsawState.tiles[first], jigsawState.tiles[index]] =
+    [jigsawState.tiles[index], jigsawState.tiles[first]];
+
+  jigsawState.firstSelected = null;
+  renderJigsaw();
+
+  if (isJigsawSolved()) {
+    jigsawState.solved = true;
+
+    setTimeout(() => {
+      solvePuzzle();
+    }, 400);
+  }
+}
+
+function createJigsawPuzzle(imageSrc, size = 4) {
+  jigsawState.size = size;
+  jigsawState.imageSrc = imageSrc;
+  jigsawState.firstSelected = null;
+  jigsawState.solved = false;
+
+  const tiles = [];
+
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      const correctIndex = row * size + col;
+
+      tiles.push({
+        row,
+        col,
+        correctIndex
+      });
+    }
+  }
+
+  jigsawState.tiles = shuffleArray(tiles);
+
+  while (isJigsawSolved()) {
+    jigsawState.tiles = shuffleArray(tiles);
+  }
+
+  renderJigsaw();
+}
+
+
+let mazeState = {
+  canvas: null,
+  ctx: null,
+  image: null,
+  player: { x: 95, y: 90 },
+  goal: { x: 790, y: 615 },
+  playerRadius: 10,
+  speed: 14,
+  active: false,
+  solved: false
+};
+
+function createMazePuzzle() {
+  preview.className = "puzzle-preview";
+  preview.innerHTML = `
+    <div class="maze-wrapper">
+      <canvas class="maze-canvas" id="mazeCanvas" width="900" height="675"></canvas>
+      <p class="maze-info">Gebruik WASD of pijltjestoetsen. Bereik de EXIT rechtsonder.</p>
+
+      <div class="maze-controls">
+        <span class="empty"></span>
+        <button type="button" data-move="up">↑</button>
+        <span class="empty"></span>
+
+        <button type="button" data-move="left">←</button>
+        <button type="button" data-move="down">↓</button>
+        <button type="button" data-move="right">→</button>
+      </div>
+    </div>
+  `;
+
+  mazeState.canvas = document.getElementById("mazeCanvas");
+  mazeState.ctx = mazeState.canvas.getContext("2d");
+  mazeState.player = { x: 105, y: 135 };
+  mazeState.goal = { x: 785, y: 600 };
+  mazeState.active = true;
+  mazeState.solved = false;
+
+  mazeState.image = new Image();
+  mazeState.image.src = "images/puzzle2.png";
+
+  mazeState.image.onload = () => {
+    drawMaze();
+  };
+
+  document.querySelectorAll("[data-move]").forEach(button => {
+    button.addEventListener("click", () => {
+      moveMazePlayer(button.dataset.move);
+    });
+  });
+}
+
+function drawMaze() {
+  const ctx = mazeState.ctx;
+  const canvas = mazeState.canvas;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.drawImage(mazeState.image, 0, 0, canvas.width, canvas.height);
+
+  // Goal marker
+  ctx.beginPath();
+  ctx.arc(mazeState.goal.x, mazeState.goal.y, 14, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 215, 74, 0.85)";
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#111";
+  ctx.stroke();
+
+  // Player marker
+  ctx.beginPath();
+  ctx.arc(mazeState.player.x, mazeState.player.y, mazeState.playerRadius, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffdf4d";
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#111";
+  ctx.stroke();
+}
+
+function isWalkablePixel(x, y) {
+  const ctx = mazeState.ctx;
+  const canvas = mazeState.canvas;
+
+  if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) {
+    return false;
+  }
+
+  const pixel = ctx.getImageData(x, y, 1, 1).data;
+
+  const r = pixel[0];
+  const g = pixel[1];
+  const b = pixel[2];
+
+  /*
+    Zandpad is meestal beige/bruin:
+    - rood vrij hoog
+    - groen middel/hoog
+    - blauw lager
+    Jungle-muren zijn vooral groen:
+    - groen dominant
+  */
+
+  const looksLikeSand =
+    r > 105 &&
+    g > 75 &&
+    b < 105 &&
+    r >= g - 25;
+
+  const looksLikeStoneOrExit =
+    r > 70 &&
+    g > 60 &&
+    b > 45 &&
+    Math.abs(r - g) < 55 &&
+    Math.abs(g - b) < 65;
+
+  return looksLikeSand || looksLikeStoneOrExit;
+}
+
+function canMoveTo(x, y) {
+  const radius = mazeState.playerRadius;
+
+  const pointsToCheck = [
+    { x, y },
+    { x: x + radius, y },
+    { x: x - radius, y },
+    { x, y: y + radius },
+    { x, y: y - radius }
+  ];
+
+  return pointsToCheck.every(point => isWalkablePixel(Math.round(point.x), Math.round(point.y)));
+}
+
+function moveMazePlayer(direction) {
+  if (!mazeState.active || mazeState.solved) return;
+
+  let nextX = mazeState.player.x;
+  let nextY = mazeState.player.y;
+
+  if (direction === "up") nextY -= mazeState.speed;
+  if (direction === "down") nextY += mazeState.speed;
+  if (direction === "left") nextX -= mazeState.speed;
+  if (direction === "right") nextX += mazeState.speed;
+
+  if (canMoveTo(nextX, nextY)) {
+    mazeState.player.x = nextX;
+    mazeState.player.y = nextY;
+  }
+
+  drawMaze();
+  checkMazeGoal();
+}
+
+function checkMazeGoal() {
+  const dx = mazeState.player.x - mazeState.goal.x;
+  const dy = mazeState.player.y - mazeState.goal.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance < 32) {
+    mazeState.solved = true;
+    mazeState.active = false;
+
+    setTimeout(() => {
+      solvePuzzle();
+    }, 500);
+  }
+}
+
+document.addEventListener("keydown", event => {
+  if (!mazeState.active) return;
+
+  const key = event.key.toLowerCase();
+
+  if (key === "arrowup" || key === "w") {
+    event.preventDefault();
+    moveMazePlayer("up");
+  }
+
+  if (key === "arrowdown" || key === "s") {
+    event.preventDefault();
+    moveMazePlayer("down");
+  }
+
+  if (key === "arrowleft" || key === "a") {
+    event.preventDefault();
+    moveMazePlayer("left");
+  }
+
+  if (key === "arrowright" || key === "d") {
+    event.preventDefault();
+    moveMazePlayer("right");
   }
 });
