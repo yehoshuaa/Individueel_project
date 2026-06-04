@@ -22,6 +22,8 @@ const memoryText = document.getElementById("memoryText");
 const continueBtn = document.getElementById("continueBtn");
 const pathArrow = document.getElementById("pathArrow");
 const mainPath = document.getElementById("mainPath");
+const memoryVideo = document.getElementById("memoryVideo");
+const memoryVideoSource = document.getElementById("memoryVideoSource");
 const root = document.documentElement;
 
 let currentStage = 0;
@@ -40,9 +42,47 @@ const pathStages = [
 ];
 
 const puzzleData = {
-  one: { stage: 0, type: "Jigsaw puzzle", title: "Solve the puzzle", text: "Herstel het eerste fragment. Daarna wordt de pijl op het pad vrijgespeeld.", previewClass: "jigsaw", previewHtml: "", memoryTitle: "Memory 1 unlocked", memoryText: "Het eerste fragment is gevonden. De route vooruit wordt zichtbaar." },
-  two: { stage: 1, type: "Maze puzzle", title: "Find the path", text: "Los het doolhof op. Deze puzzel past bij het idee dat de gebruiker de route door de jungle ontdekt.", previewClass: "maze", previewHtml: "", memoryTitle: "Memory 2 unlocked", memoryText: "Het tweede fragment opent een langer stuk van hetzelfde junglepad." },
-  three: { stage: 2, type: "Spot the difference", title: "Find the difference", text: "Zoek de verschillen om het laatste memory fragment vrij te spelen.", previewClass: "diff", previewHtml: "<span></span><span></span>", memoryTitle: "Memory 3 unlocked", memoryText: "Alle memories zijn gevonden. Het laatste stuk van het pad is nu open." }
+  one: {
+    stage: 0,
+    type: "Jigsaw puzzle",
+    title: "Solve the puzzle",
+    text: "Herstel het eerste fragment. Daarna wordt de pijl op het pad vrijgespeeld.",
+    previewClass: "jigsaw",
+    previewHtml: "",
+    memoryTitle: "Memory 1 unlocked",
+    memoryText: "Het eerste fragment is gevonden. De route vooruit wordt zichtbaar.",
+    video: "videos/memory1.mp4",
+    videoStart: 0,
+    videoEnd: 8
+  },
+
+  two: {
+    stage: 1,
+    type: "Maze puzzle",
+    title: "Find the path",
+    text: "Los het doolhof op. Deze puzzel past bij het idee dat de gebruiker de route door de jungle ontdekt.",
+    previewClass: "maze",
+    previewHtml: "",
+    memoryTitle: "Memory 2 unlocked",
+    memoryText: "Het tweede fragment opent een langer stuk van hetzelfde junglepad.",
+    video: "videos/memory2.mp4",
+    videoStart: 0,
+    videoEnd: 8
+  },
+
+  three: {
+    stage: 2,
+    type: "Spot the difference",
+    title: "Find the difference",
+    text: "Zoek de verschillen om het laatste memory fragment vrij te spelen.",
+    previewClass: "diff",
+    previewHtml: "<span></span><span></span>",
+    memoryTitle: "Memory 3 unlocked",
+    memoryText: "Alle memories zijn gevonden. Het laatste stuk van het pad is nu open.",
+    video: "videos/memory3.mp4",
+    videoStart: 0,
+    videoEnd: 8
+  }
 };
 
 function show(screen) {
@@ -498,6 +538,54 @@ function closePuzzle() {
   }
 }
 
+function playMemoryVideo(videoSrc, startTime = 0, endTime = 8) {
+  if (!memoryVideo || !memoryVideoSource) {
+    console.error("memoryVideo of memoryVideoSource bestaat niet in HTML.");
+    return;
+  }
+
+  console.log("Video starten:", videoSrc);
+
+  memoryVideo.pause();
+  memoryVideo.currentTime = 0;
+  memoryVideo.style.display = "block";
+
+  // Tijdelijk handig voor testen
+  memoryVideo.controls = true;
+
+  // Eerst event klaarzetten
+  memoryVideo.onloadedmetadata = () => {
+    console.log("Video metadata geladen. Duration:", memoryVideo.duration);
+
+    memoryVideo.currentTime = startTime;
+
+    memoryVideo.play()
+      .then(() => {
+        console.log("Video speelt.");
+      })
+      .catch(error => {
+        console.error("Video kon niet automatisch afspelen:", error);
+      });
+  };
+
+  memoryVideo.onerror = () => {
+    console.error("Video kon niet laden. Check pad/bestandsnaam:", videoSrc);
+  };
+
+  memoryVideoSource.src = videoSrc;
+  memoryVideo.load();
+
+  const stopClip = () => {
+    if (memoryVideo.currentTime >= endTime) {
+      memoryVideo.pause();
+      memoryVideo.removeEventListener("timeupdate", stopClip);
+    }
+  };
+
+  memoryVideo.removeEventListener("timeupdate", stopClip);
+  memoryVideo.addEventListener("timeupdate", stopClip);
+}
+
 function solvePuzzle() {
   if (!activePuzzle) return;
 
@@ -508,9 +596,16 @@ function solvePuzzle() {
 
   closePuzzle();
 
-  memoryTitle.textContent = data.memoryTitle;
-  memoryText.textContent = data.memoryText;
-  memoryModal.classList.remove("hidden");
+memoryTitle.textContent = data.memoryTitle;
+memoryText.textContent = data.memoryText;
+memoryModal.classList.remove("hidden");
+
+if (data.video) {
+  playMemoryVideo(data.video, data.videoStart || 0, data.videoEnd || 8);
+} else if (memoryVideo) {
+  memoryVideo.pause();
+  memoryVideo.style.display = "none";
+}
 
   pathArrow.disabled = false;
   pathArrow.querySelector("small").textContent = activePuzzle === "three" ? "Finish" : "Open";
@@ -530,6 +625,12 @@ function solvePuzzle() {
 
 function closeMemory() {
   memoryModal.classList.add("hidden");
+
+  if (memoryVideo) {
+    memoryVideo.pause();
+    memoryVideo.currentTime = 0;
+    memoryVideo.style.display = "none";
+  }
 }
 
 function followPath() {
@@ -569,14 +670,12 @@ function followPath() {
 
 startBtn.addEventListener("click", () => {
   reset();
-  createJungleWalls();
   createForest();
   show(gameScreen);
 });
 
 window.addEventListener("resize", () => {
   if (gameScreen.classList.contains("active")) {
-    createJungleWalls();
     createForest();
   }
 });
@@ -818,16 +917,25 @@ function createForest() {
 
   const isMobile = window.innerWidth < 760;
 
-  // Minder bomen, want de jungle-wall doet nu het meeste visuele werk
-  const rows = isMobile ? 4 : 7;
-  const treesPerRow = isMobile ? 1 : 2;
+  /*
+    Desktop: 24 bomen
+    Mobiel: 10 bomen
+  */
+  const rows = isMobile ? 5 : 12;
+  const treesPerRow = 2;
 
   const pathCenterX = 1600;
-  const minDistanceFromPath = 760;
-  const maxDistanceFromPath = 1250;
 
-  const worldTop = 700;
-  const worldBottom = 8600;
+  /*
+    Hoe ver bomen van het pad staan.
+    Lager = dichter bij pad.
+    Hoger = meer naar zijkanten.
+  */
+  const minDistanceFromPath = isMobile ? 680 : 720;
+  const maxDistanceFromPath = isMobile ? 1050 : 1350;
+
+  const worldTop = 600;
+  const worldBottom = 8750;
   const rowHeight = (worldBottom - worldTop) / rows;
 
   for (let row = 0; row < rows; row++) {
@@ -837,10 +945,15 @@ function createForest() {
       const tree = document.createElement("model-viewer");
 
       const file = treeFiles[Math.floor(Math.random() * treeFiles.length)];
-      const side = i % 2 === 0 ? -1 : 1;
 
-      const yJitter = (Math.random() - 0.5) * rowHeight * 0.45;
-      const xJitter = (Math.random() - 0.5) * 220;
+      /*
+        i = 0 links
+        i = 1 rechts
+      */
+      const side = i === 0 ? -1 : 1;
+
+      const yJitter = (Math.random() - 0.5) * rowHeight * 0.55;
+      const xJitter = (Math.random() - 0.5) * 260;
 
       const distance =
         minDistanceFromPath +
@@ -849,11 +962,14 @@ function createForest() {
       const x = pathCenterX + side * distance + xJitter;
       const y = baseY + yJitter;
 
+      /*
+        Onderaan/dichterbij groter, richting horizon kleiner.
+      */
       const depthFactor = y / worldBottom;
 
       const scale = isMobile
-        ? 1.6 + depthFactor * 1.0 + Math.random() * 0.3
-        : 2.0 + depthFactor * 1.8 + Math.random() * 0.45;
+        ? 1.4 + depthFactor * 1.3 + Math.random() * 0.35
+        : 1.8 + depthFactor * 2.2 + Math.random() * 0.55;
 
       const rot = `${Math.floor(Math.random() * 360)}deg`;
 
@@ -870,58 +986,5 @@ function createForest() {
 
       forestLayer.appendChild(tree);
     }
-  }
-}
-
-function createJungleWalls() {
-  const wallLayer = document.getElementById("wallLayer");
-  if (!wallLayer) return;
-
-  wallLayer.innerHTML = "";
-
-  const isMobile = window.innerWidth < 760;
-
-  const segmentCount = isMobile ? 4 : 7;
-
-  const worldBottom = 8600;
-  const worldTop = 1800;
-
-  const nearLeftX = 180;
-  const nearRightX = 3020;
-
-  const farLeftX = 900;
-  const farRightX = 2300;
-
-  const rowHeight = (worldBottom - worldTop) / (segmentCount - 1);
-
-  for (let i = 0; i < segmentCount; i++) {
-    const t = i / (segmentCount - 1);
-    const y = worldBottom - i * rowHeight;
-
-    const leftX = nearLeftX + (farLeftX - nearLeftX) * t;
-    const rightX = nearRightX + (farRightX - nearRightX) * t;
-
-    const scale = isMobile
-      ? 0.85 - t * 0.35
-      : 1.05 - t * 0.45;
-
-    const angle = 16 - t * 8;
-
-    const leftWall = document.createElement("div");
-    leftWall.className = "wall-segment left";
-    leftWall.style.left = `${leftX}px`;
-    leftWall.style.top = `${y}px`;
-    leftWall.style.setProperty("--wall-scale", scale.toFixed(2));
-    leftWall.style.setProperty("--wall-angle", `${angle}deg`);
-
-    const rightWall = document.createElement("div");
-    rightWall.className = "wall-segment right";
-    rightWall.style.left = `${rightX}px`;
-    rightWall.style.top = `${y}px`;
-    rightWall.style.setProperty("--wall-scale", scale.toFixed(2));
-    rightWall.style.setProperty("--wall-angle", `${-angle}deg`);
-
-    wallLayer.appendChild(leftWall);
-    wallLayer.appendChild(rightWall);
   }
 }

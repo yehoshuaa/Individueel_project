@@ -30,7 +30,6 @@
         <div class="tilt" id="tilt">
           <div class="world" id="world">
             <div class="forest-bg"></div>
-            <div id="wallLayer" aria-hidden="true"></div>
             <div id="forestLayer" aria-hidden="true"></div>
             <svg class="path-svg" viewBox="0 0 3200 9000" preserveAspectRatio="none" aria-hidden="true">
               <defs>
@@ -73,6 +72,11 @@
         <p class="kicker">Memory unlocked</p>
         <h2 id="memoryTitle"></h2>
         <p id="memoryText"></p>
+
+        <video id="memoryVideo" class="memory-video" muted playsinline controls>
+          <source id="memoryVideoSource" src="" type="video/mp4">
+        </video>
+
         <button class="gold-btn" id="continueBtn">Verder</button>
       </div>
     </section>
