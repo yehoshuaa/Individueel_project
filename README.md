@@ -1,21 +1,10 @@
-# Lost Memories - Straight 3D Path
+# Individueel project - Lost Memories latest code
 
-Rechte 3D-route zonder bochten.
+Zet je afbeeldingen hier:
+- images/puzzle1.jpg  -> jigsaw puzzle
+- images/puzzle2.png  -> maze puzzle
 
-Open `index.html` met Live Server.
-
-Aanpassen:
-- Camera/POV: `style.css` bij `:root`
-  - `--player-screen-y`
-  - `--tilt-angle`
-  - `--camera-distance`
-- Puzzelposities: `script.js` bij `placePuzzleButtons()`
-- Stopmomenten: `script.js` bij `pathStages`
-
-Update: het pad is breder en duidelijk bruin gemaakt in `.main-path` en `.inner-path`.
-
-Update:
-- Het pad is langer gemaakt: SVG viewBox/world height is nu 9000px hoog.
-- De rechte route loopt van y=8800 naar y=200.
-- De camera loopt langzamer over het pad via `WALK_DURATION = 9000` in script.js.
-- Verhoog `WALK_DURATION` voor nog langzamer lopen.
+Belangrijk:
+- Walk snelheid: style.css `--walk-duration` en script.js `WALK_DURATION`
+- Jigsaw: 4x4 tiles
+- Maze: canvas + pixel collision + klik-coördinaten in console
