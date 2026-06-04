@@ -29,19 +29,12 @@
         <div class="tilt" id="tilt">
           <div class="world" id="world">
             <div class="forest-bg"></div>
-
             <svg class="path-svg" viewBox="0 0 3200 9000" preserveAspectRatio="none" aria-hidden="true">
               <defs>
-                <linearGradient id="pathColor" x1="0" x2="1">
-                  <stop offset="0%" stop-color="#4b2f19"/>
-                  <stop offset="46%" stop-color="#c5a261"/>
-                  <stop offset="100%" stop-color="#6c4524"/>
-                </linearGradient>
                 <filter id="pathShadow">
                   <feDropShadow dx="0" dy="24" stdDeviation="18" flood-color="#000" flood-opacity=".42"/>
                 </filter>
               </defs>
-
               <path id="mainPath" class="main-path" d="M 1600 8800 L 1600 200"/>
               <path class="inner-path" d="M 1600 8800 L 1600 200"/>
               <path class="footsteps" d="M 1600 8800 L 1600 200"/>
@@ -50,11 +43,7 @@
             <button class="puzzle p1" data-puzzle="one"><span>🧩</span><small>Puzzle 1</small></button>
             <button class="puzzle p2 locked" data-puzzle="two"><span>◎</span><small>Puzzle 2</small></button>
             <button class="puzzle p3 locked" data-puzzle="three"><span>◐</span><small>Puzzle 3</small></button>
-
-            <button class="path-arrow" id="pathArrow" disabled>
-              ↑
-              <small>Locked</small>
-            </button>
+            <button class="path-arrow" id="pathArrow" disabled>↑<small>Locked</small></button>
           </div>
         </div>
       </div>
@@ -93,7 +82,6 @@
       </div>
     </section>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>
