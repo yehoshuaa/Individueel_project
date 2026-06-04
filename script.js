@@ -569,7 +569,16 @@ function followPath() {
 
 startBtn.addEventListener("click", () => {
   reset();
+  createJungleWalls();
+  createForest();
   show(gameScreen);
+});
+
+window.addEventListener("resize", () => {
+  if (gameScreen.classList.contains("active")) {
+    createJungleWalls();
+    createForest();
+  }
 });
 
 menuBtn.addEventListener("click", () => {
@@ -795,3 +804,124 @@ function updateDifferenceStatus() {
   status.textContent = `Gevonden: ${found} / ${diffState.differences.length}`;
 }
 
+function createForest() {
+  const forestLayer = document.getElementById("forestLayer");
+  if (!forestLayer) return;
+
+  forestLayer.innerHTML = "";
+
+  const treeFiles = [
+    "trees/tree%201.glb",
+    "trees/tree%202.glb",
+    "trees/tree%203.glb"
+  ];
+
+  const isMobile = window.innerWidth < 760;
+
+  // Minder bomen, want de jungle-wall doet nu het meeste visuele werk
+  const rows = isMobile ? 4 : 7;
+  const treesPerRow = isMobile ? 1 : 2;
+
+  const pathCenterX = 1600;
+  const minDistanceFromPath = 760;
+  const maxDistanceFromPath = 1250;
+
+  const worldTop = 700;
+  const worldBottom = 8600;
+  const rowHeight = (worldBottom - worldTop) / rows;
+
+  for (let row = 0; row < rows; row++) {
+    const baseY = worldBottom - row * rowHeight;
+
+    for (let i = 0; i < treesPerRow; i++) {
+      const tree = document.createElement("model-viewer");
+
+      const file = treeFiles[Math.floor(Math.random() * treeFiles.length)];
+      const side = i % 2 === 0 ? -1 : 1;
+
+      const yJitter = (Math.random() - 0.5) * rowHeight * 0.45;
+      const xJitter = (Math.random() - 0.5) * 220;
+
+      const distance =
+        minDistanceFromPath +
+        Math.random() * (maxDistanceFromPath - minDistanceFromPath);
+
+      const x = pathCenterX + side * distance + xJitter;
+      const y = baseY + yJitter;
+
+      const depthFactor = y / worldBottom;
+
+      const scale = isMobile
+        ? 1.6 + depthFactor * 1.0 + Math.random() * 0.3
+        : 2.0 + depthFactor * 1.8 + Math.random() * 0.45;
+
+      const rot = `${Math.floor(Math.random() * 360)}deg`;
+
+      tree.className = "tree";
+      tree.setAttribute("src", file);
+      tree.setAttribute("interaction-prompt", "none");
+      tree.setAttribute("shadow-intensity", "0");
+      tree.setAttribute("exposure", "1");
+
+      tree.style.left = `${Math.round(x)}px`;
+      tree.style.top = `${Math.round(y)}px`;
+      tree.style.setProperty("--tree-scale", scale.toFixed(2));
+      tree.style.setProperty("--tree-rot", rot);
+
+      forestLayer.appendChild(tree);
+    }
+  }
+}
+
+function createJungleWalls() {
+  const wallLayer = document.getElementById("wallLayer");
+  if (!wallLayer) return;
+
+  wallLayer.innerHTML = "";
+
+  const isMobile = window.innerWidth < 760;
+
+  const segmentCount = isMobile ? 4 : 7;
+
+  const worldBottom = 8600;
+  const worldTop = 1800;
+
+  const nearLeftX = 180;
+  const nearRightX = 3020;
+
+  const farLeftX = 900;
+  const farRightX = 2300;
+
+  const rowHeight = (worldBottom - worldTop) / (segmentCount - 1);
+
+  for (let i = 0; i < segmentCount; i++) {
+    const t = i / (segmentCount - 1);
+    const y = worldBottom - i * rowHeight;
+
+    const leftX = nearLeftX + (farLeftX - nearLeftX) * t;
+    const rightX = nearRightX + (farRightX - nearRightX) * t;
+
+    const scale = isMobile
+      ? 0.85 - t * 0.35
+      : 1.05 - t * 0.45;
+
+    const angle = 16 - t * 8;
+
+    const leftWall = document.createElement("div");
+    leftWall.className = "wall-segment left";
+    leftWall.style.left = `${leftX}px`;
+    leftWall.style.top = `${y}px`;
+    leftWall.style.setProperty("--wall-scale", scale.toFixed(2));
+    leftWall.style.setProperty("--wall-angle", `${angle}deg`);
+
+    const rightWall = document.createElement("div");
+    rightWall.className = "wall-segment right";
+    rightWall.style.left = `${rightX}px`;
+    rightWall.style.top = `${y}px`;
+    rightWall.style.setProperty("--wall-scale", scale.toFixed(2));
+    rightWall.style.setProperty("--wall-angle", `${-angle}deg`);
+
+    wallLayer.appendChild(leftWall);
+    wallLayer.appendChild(rightWall);
+  }
+}

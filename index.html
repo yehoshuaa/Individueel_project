@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lost Memories - Straight 3D Path</title>
   <link rel="stylesheet" href="style.css" />
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
   <main class="app">
@@ -29,6 +30,8 @@
         <div class="tilt" id="tilt">
           <div class="world" id="world">
             <div class="forest-bg"></div>
+            <div id="wallLayer" aria-hidden="true"></div>
+            <div id="forestLayer" aria-hidden="true"></div>
             <svg class="path-svg" viewBox="0 0 3200 9000" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <filter id="pathShadow">
