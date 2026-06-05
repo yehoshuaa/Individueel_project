@@ -750,3 +750,9 @@ button {
     bottom: 24px;
   }
 }
+
+/* A-Frame objecten zelf gebruiken geen normale CSS-hover,
+   maar deze classes houden het overzichtelijk. */
+.puzzle-object {
+  cursor: pointer;
+}

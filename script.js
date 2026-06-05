@@ -42,6 +42,24 @@ let treeQuality = "normal";
 const solved = { one: false, two: false, three: false };
 const WALK_DURATION = 9000;
 
+function refreshAframeScene() {
+  const scene = document.getElementById("jungleScene");
+  if (!scene) return;
+
+  // Browser resize triggeren
+  window.dispatchEvent(new Event("resize"));
+
+  // A-Frame renderer expliciet opnieuw laten meten
+  if (scene.renderer) {
+    scene.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  if (scene.camera) {
+    scene.camera.aspect = window.innerWidth / window.innerHeight;
+    scene.camera.updateProjectionMatrix();
+  }
+}
+
 const treeQualitySettings = {
   none: {
     label: "Super laag",
@@ -50,23 +68,23 @@ const treeQualitySettings = {
   },
   low: {
     label: "Low",
-    rows: 5,
-    treesPerRow: 1
+    rows: 25,
+    treesPerRow: 20
   },
   normal: {
     label: "Normal",
-    rows: 10,
-    treesPerRow: 2
+    rows: 30,
+    treesPerRow: 45
   },
   high: {
     label: "High",
-    rows: 14,
-    treesPerRow: 3
+    rows: 35,
+    treesPerRow: 50
   },
   ultra: {
     label: "Super mooi",
-    rows: 18,
-    treesPerRow: 19
+    rows: 60,
+    treesPerRow: 85
   }
 };
 
@@ -106,12 +124,56 @@ function setCamera(stage, walking = false) {
 function setHotspotLocked(id, locked) {
   const hotspot = document.getElementById(id);
   if (!hotspot) return;
+
+  const aura = hotspot.querySelector(".puzzle-aura");
+  const particles = hotspot.querySelectorAll(".puzzle-particles a-sphere");
+
+  const unlockedScales = {
+    hotspotOne: "1.2 1.2 1.2",
+    hotspotTwo: "0.9 0.9 0.9",
+    hotspotThree: "1.1 1.1 1.1"
+  };
+
+  const lockedScales = {
+    hotspotOne: "1.0 1.0 1.0",
+    hotspotTwo: "0.75 0.75 0.75",
+    hotspotThree: "0.9 0.9 0.9"
+  };
+
   if (locked) {
     hotspot.classList.add("locked");
-    hotspot.setAttribute("material", "color: #f6f2dc; opacity: 0.35");
+    hotspot.setAttribute("scale", lockedScales[id] || "0.8 0.8 0.8");
+
+    if (aura) {
+      aura.setAttribute(
+        "material",
+        "color: #ffd84a; transparent: true; opacity: 0.12"
+      );
+    }
+
+    particles.forEach(particle => {
+      particle.setAttribute(
+        "material",
+        "color: #ffd84a; transparent: true; opacity: 0.08"
+      );
+    });
   } else {
     hotspot.classList.remove("locked");
-    hotspot.setAttribute("material", "color: #f6f2dc; opacity: 0.96");
+    hotspot.setAttribute("scale", unlockedScales[id] || "1 1 1");
+
+    if (aura) {
+      aura.setAttribute(
+        "material",
+        "color: #ffd84a; transparent: true; opacity: 0.35"
+      );
+    }
+
+    particles.forEach(particle => {
+      particle.setAttribute(
+        "material",
+        "color: #ffd84a; transparent: true; opacity: 0.55"
+      );
+    });
   }
 }
 
@@ -176,6 +238,42 @@ function createPathDots() {
     pathDots.appendChild(dot);
   }
 }
+
+function setHotspotLocked(id, locked) {
+  const hotspot = document.getElementById(id);
+  if (!hotspot) return;
+
+  const light = hotspot.querySelector("a-light");
+
+  const unlockedScales = {
+    hotspotOne: "2.2 2.2 2.2",   // spear
+    hotspotTwo: "0.2 0.2 0.2",   // tea set
+    hotspotThree: "0.4 0.4 0.4"  // bananas
+  };
+
+  const lockedScales = {
+    hotspotOne: "2.2 2.2 2.2",   // spear
+    hotspotTwo: "0.1 0.1 0.1",   // tea set
+    hotspotThree: "0.2 0.2 0.2"  // bananas
+  };
+
+  if (locked) {
+    hotspot.classList.add("locked");
+    hotspot.setAttribute("scale", lockedScales[id] || "0.8 0.8 0.8");
+
+    if (light) {
+      light.setAttribute("intensity", "0.25");
+    }
+  } else {
+    hotspot.classList.remove("locked");
+    hotspot.setAttribute("scale", unlockedScales[id] || "1 1 1");
+
+    if (light) {
+      light.setAttribute("intensity", "1.8");
+    }
+  }
+}
+
 /* -------------------- A-FRAME PLACEMENT HELPERS -------------------- */
 
 const PATH_HALF_WIDTH = 2.4;
@@ -185,9 +283,9 @@ const PATH_HALF_WIDTH = 2.4;
   Dus niet alleen het middelpunt moet naast het pad staan,
   het hele model moet visueel naast het pad blijven.
 */
-const TREE_MIN_X = 54;
-const DETAIL_MIN_X = 50;
-const STONE_MIN_X = 50;
+const TREE_MIN_X = 65;
+const DETAIL_MIN_X = 10;
+const STONE_MIN_X = 10;
 
 function randomSideX(min = 12, max = 32) {
   const side = Math.random() < 0.5 ? -1 : 1;
@@ -254,7 +352,7 @@ function createForest() {
 function createAframeGrass(parent) {
   if (!parent) return;
 
-  const count = 55;
+  const count = 500;
 
   for (let i = 0; i < count; i++) {
     const grass = document.createElement("a-entity");
@@ -281,7 +379,7 @@ function createAframeStones(parent) {
   if (!parent) return;
 
   const stoneModels = ["#stoneModel", "#stoneBigModel"];
-  const count = 10;
+  const count = 40;
 
   for (let i = 0; i < count; i++) {
     const stone = document.createElement("a-entity");
@@ -651,8 +749,103 @@ function followPath() {
   }
 }
 
+/* -------------------- glow -------------------- */
+
+function createPuzzleParticles() {
+  document.querySelectorAll(".puzzle-particles").forEach(container => {
+    container.innerHTML = "";
+
+    for (let i = 0; i < 8; i++) {
+      const particle = document.createElement("a-sphere");
+
+      const x = (Math.random() - 0.5) * 1.2;
+      const y = Math.random() * 0.4;
+      const z = (Math.random() - 0.5) * 1.2;
+
+      const endY = y + 0.8 + Math.random() * 0.6;
+      const duration = 1400 + Math.random() * 900;
+
+      particle.setAttribute("radius", "0.035");
+      particle.setAttribute("position", `${x.toFixed(2)} ${y.toFixed(2)} ${z.toFixed(2)}`);
+      particle.setAttribute(
+        "material",
+        "color: #ffd84a; transparent: true; opacity: 0.55"
+      );
+
+      particle.setAttribute(
+        "animation__float",
+        `property: position; to: ${x.toFixed(2)} ${endY.toFixed(2)} ${z.toFixed(2)}; dur: ${duration}; loop: true; dir: alternate; easing: easeInOutSine`
+      );
+
+      particle.setAttribute(
+        "animation__fade",
+        `property: material.opacity; from: 0.15; to: 0.65; dur: ${duration}; loop: true; dir: alternate; easing: easeInOutSine`
+      );
+
+      container.appendChild(particle);
+    }
+  });
+}
+
+function setupPuzzleHoverEffects() {
+  ["hotspotOne", "hotspotTwo", "hotspotThree"].forEach(id => {
+    const hotspot = document.getElementById(id);
+    if (!hotspot) return;
+
+    const aura = hotspot.querySelector(".puzzle-aura");
+
+    hotspot.addEventListener("mouseenter", () => {
+      if (hotspot.classList.contains("locked")) return;
+
+      if (aura) {
+        aura.setAttribute(
+          "material",
+          "color: #ffd84a; transparent: true; opacity: 0.85"
+        );
+
+        aura.setAttribute(
+          "animation__pulse",
+          "property: scale; from: 1 1 1; to: 1.25 1.25 1.25; dur: 500; dir: alternate; loop: true; easing: easeInOutSine"
+        );
+      }
+    });
+
+    hotspot.addEventListener("mouseleave", () => {
+      if (aura) {
+        const opacity = hotspot.classList.contains("locked") ? 0.12 : 0.35;
+
+        aura.setAttribute(
+          "material",
+          `color: #ffd84a; transparent: true; opacity: ${opacity}`
+        );
+
+        aura.removeAttribute("animation__pulse");
+        aura.setAttribute("scale", "1 1 1");
+      }
+    });
+  });
+}
+
 /* -------------------- EVENTS -------------------- */
-startBtn?.addEventListener("click", () => { reset(); resetTimer(); createPathDots(); createForest(); show(gameScreen); startTimer(); });
+startBtn?.addEventListener("click", () => {
+  reset();
+  resetTimer();
+  createPathDots();
+  createForest();
+  createPuzzleParticles();
+
+  show(gameScreen);
+
+  setTimeout(() => {
+    refreshAframeScene();
+  }, 100);
+
+  setTimeout(() => {
+    refreshAframeScene();
+  }, 400);
+
+  startTimer();
+});
 window.addEventListener("resize", () => { if (gameScreen && gameScreen.classList.contains("active")) createForest(); });
 menuBtn?.addEventListener("click", () => { reset(); resetTimer(); show(startScreen); });
 settingsBtn?.addEventListener("click", openSettings);
@@ -671,3 +864,4 @@ continueBtn?.addEventListener("click", closeMemory);
 timerToggle?.addEventListener("change", () => { timerEnabled = timerToggle.checked; });
 document.addEventListener("keydown", event => { if (event.key === "Escape") { closePuzzle(); closeMemory(); closeSettings(); } });
 updateQualityButtons();
+

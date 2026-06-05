@@ -54,13 +54,17 @@
             <a-asset-item id="tree2Model" src="trees/tree%202.glb"></a-asset-item>
             <a-asset-item id="tree3Model" src="trees/tree%203.glb"></a-asset-item>
 
+            <a-asset-item id="spearModel" src="trees/spear.glb"></a-asset-item>
+            <a-asset-item id="teaSetModel" src="trees/tea_set.glb"></a-asset-item>
+            <a-asset-item id="bananasModel" src="trees/bananas.glb"></a-asset-item>
+
             <a-asset-item id="grassModel" src="trees/gras.glb"></a-asset-item>
             <a-asset-item id="stoneModel" src="trees/stone.glb"></a-asset-item>
             <a-asset-item id="stoneBigModel" src="trees/stone%20big.glb"></a-asset-item>
             <a-asset-item id="trunkModel" src="trees/tree%20trunk.glb"></a-asset-item>
             <a-asset-item id="miniTreeModel" src="trees/tree%20mini%201.glb"></a-asset-item>
             <a-asset-item id="tentModel" src="trees/tent.glb"></a-asset-item>
-          </a-assets>
+            <a-asset-item id="janeModel" src="trees/jane_porter.glb"></a-asset-item>          </a-assets>
 
           <!-- Camera -->
           <a-entity id="cameraRig" position="0 1.7 8">
@@ -157,38 +161,83 @@
             scale="2.25 2.25 2.25">
           </a-entity>
 
-          <!-- Puzzle hotspots -->
+          <a-entity
+          id="janePorter"
+          gltf-model="#janeModel"
+          position="-8 0 -86"
+          rotation="0 200 0"
+          scale="1.0 1.0 1.0">
+          </a-entity>
+
+          <!-- Puzzle 1 = spear -->
           <a-entity
             id="hotspotOne"
-            class="clickable puzzle-hotspot"
-            geometry="primitive: circle; radius: 0.82"
-            material="color: #f6f2dc; opacity: 0.96"
-            position="-3.8 1.35 -4"
-            rotation="0 0 0"
-            text="value: 🧩\nPuzzle 1; align: center; color: #111; width: 4"
+            class="clickable puzzle-object"
+            gltf-model="#spearModel"
+            position="-3.8 0.55 -4"
+            rotation="0 35 0"
+            scale="1.2 1.2 1.2"
+            animation="property: position; dir: alternate; dur: 1300; easing: easeInOutSine; loop: true; to: -3.8 0.8 -4"
             data-puzzle="one">
+
+            <a-torus
+              class="puzzle-aura"
+              position="0 -0.35 0"
+              rotation="90 0 0"
+              radius="0.9"
+              radius-tubular="0.025"
+              material="color: #ffd84a; transparent: true; opacity: 0.35">
+            </a-torus>
+
+            <a-entity class="puzzle-particles"></a-entity>
           </a-entity>
 
+
+          <!-- Puzzle 2 = tea set -->
           <a-entity
             id="hotspotTwo"
-            class="clickable puzzle-hotspot locked"
-            geometry="primitive: circle; radius: 0.82"
-            material="color: #f6f2dc; opacity: 0.35"
-            position="-3.8 1.35 -31"
-            rotation="0 0 0"
-            text="value: ◎\nPuzzle 2; align: center; color: #111; width: 4"
+            class="clickable puzzle-object locked"
+            gltf-model="#teaSetModel"
+            position="-3.8 0.45 -31"
+            rotation="0 120 0"
+            scale="0.4 0.4 0.4"
+            animation="property: position; dir: alternate; dur: 1300; easing: easeInOutSine; loop: true; to: -3.8 0.7 -31"
             data-puzzle="two">
+
+            <a-torus
+              class="puzzle-aura"
+              position="0 -0.28 0"
+              rotation="90 0 0"
+              radius="6.9"
+              radius-tubular="0.025"
+              material="color: #ffd84a; transparent: true; opacity: 0.12">
+            </a-torus>
+
+            <a-entity class="puzzle-particles"></a-entity>
           </a-entity>
 
+
+          <!-- Puzzle 3 = bananas -->
           <a-entity
             id="hotspotThree"
-            class="clickable puzzle-hotspot locked"
-            geometry="primitive: circle; radius: 0.82"
-            material="color: #f6f2dc; opacity: 0.35"
-            position="-3.8 1.35 -58"
-            rotation="0 0 0"
-            text="value: ◐\nPuzzle 3; align: center; color: #111; width: 4"
+            class="clickable puzzle-object locked"
+            gltf-model="#bananasModel"
+            position="-3.8 0.45 -58"
+            rotation="0 220 0"
+            scale="0.4 0.4 0.4"
+            animation="property: position; dir: alternate; dur: 1300; easing: easeInOutSine; loop: true; to: -3.8 0.7 -58"
             data-puzzle="three">
+
+            <a-torus
+              class="puzzle-aura"
+              position="0 -0.28 0"
+              rotation="90 0 0"
+              radius="0.9"
+              radius-tubular="0.025"
+              material="color: #ffd84a; transparent: true; opacity: 0.12">
+            </a-torus>
+
+            <a-entity class="puzzle-particles"></a-entity>
           </a-entity>
         </a-scene>
 
